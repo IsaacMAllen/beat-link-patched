@@ -5,6 +5,8 @@ import java.net.*;
 import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -31,6 +33,8 @@ import org.slf4j.LoggerFactory;
 @SuppressWarnings("LoggingSimilarMessage")
 @API(status = API.Status.STABLE)
 public class VirtualCdj extends LifecycleParticipant {
+
+    private final ExecutorService listenerExecutor = Executors.newCachedThreadPool();
 
     private static final Logger logger = LoggerFactory.getLogger(VirtualCdj.class);
 
@@ -507,6 +511,9 @@ public class VirtualCdj extends LifecycleParticipant {
      */
     void processUpdate(DeviceUpdate update) {
         updates.put(DeviceReference.getDeviceReference(update), update);
+        DeviceReference ref = DeviceReference.getDeviceReference(update);
+        DeviceFinder.getInstance().refreshDeviceTimestamp(ref);
+        logger.debug("Refreshed timestamp for device {}", ref);
 
         // Keep track of the largest sync number we see.
         if (update instanceof CdjStatus) {
@@ -1442,7 +1449,7 @@ public class VirtualCdj extends LifecycleParticipant {
     private void deliverDeviceUpdate(final DeviceUpdate update) {
         for (DeviceUpdateListener listener : getUpdateListeners()) {
             try {
-                listener.received(update);
+                listenerExecutor.submit(() -> listener.received(update));
             } catch (Throwable t) {
                 logger.warn("Problem delivering device update to listener", t);
             }

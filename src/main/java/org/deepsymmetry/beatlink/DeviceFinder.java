@@ -31,10 +31,10 @@ public class DeviceFinder extends LifecycleParticipant {
 
     /**
      * The number of milliseconds after which we will consider a device to have disappeared if
-     * we have not received an announcement from it.
+     * we have not received an anno?uncement from it.
      */
     @API(status = API.Status.STABLE)
-    public static final int MAXIMUM_AGE = 10000;
+    public static final int MAXIMUM_AGE = 30000;
 
     /**
      * The socket used to listen for announcement packets while we are active.
@@ -52,6 +52,14 @@ public class DeviceFinder extends LifecycleParticipant {
      * have yet been seen.
      */
     private static final AtomicLong firstDeviceTime = new AtomicLong(0);
+
+    @API(status = API.Status.INTERNAL)
+    public void refreshDeviceTimestamp(DeviceReference ref) {
+        DeviceAnnouncement announcement = devices.get(ref);
+        if (announcement != null) {
+            announcement.refreshTimestamp(); // you'll add this next
+        }
+    }
 
     /**
      * Check whether we are presently listening for device announcements.

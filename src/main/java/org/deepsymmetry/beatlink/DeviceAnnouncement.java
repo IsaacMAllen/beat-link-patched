@@ -24,7 +24,7 @@ public class DeviceAnnouncement {
     /**
      * The last time the device was heard from.
      */
-    private final long timestamp;
+    private long timestamp;
 
     /**
      * The name reported by the device.
@@ -40,6 +40,10 @@ public class DeviceAnnouncement {
      * The packet data containing the device announcement.
      */
     private final byte[] packetBytes;
+
+    public void refreshTimestamp() {
+        this.timestamp = System.currentTimeMillis();
+    }
 
     /**
      * Constructor sets all the immutable interpreted fields based on the packet content.
